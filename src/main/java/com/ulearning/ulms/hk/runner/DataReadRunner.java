@@ -29,7 +29,7 @@ public class DataReadRunner implements ApplicationRunner {
     @Value("${camera.password}")
     private String password;
     @Value("${camera.port}")
-    private int port;
+    private short port;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -39,6 +39,7 @@ public class DataReadRunner implements ApplicationRunner {
         //等待过程中，如果设备上传报警信息，在报警回调函数里面接收和处理报警信息
         Timer timer = new Timer();// 实例化Timer类
         timer.schedule(new TimerTask() {
+            @Override
             public void run() {
                 try {
                     log.info("Data Scheduled Read Runner Start... ");

@@ -3,7 +3,6 @@ package com.ulearning.ulms.hk.service;
 import com.ulearning.ulms.hk.HCNetSDK;
 import com.ulearning.ulms.hk.config.SdkInit;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 
@@ -41,7 +40,7 @@ public class MemberFlowUploadService {
     }
 
 
-    public void initMemberFlowUpload(String m_sDeviceIP, String m_sUsername, String m_sPassword, int m_sPort) throws FileNotFoundException {
+    public void initMemberFlowUpload(String m_sDeviceIP, String m_sUsername, String m_sPassword, short m_sPort) throws FileNotFoundException {
         long startTime = System.currentTimeMillis();
         // 初始化
         hCNetSDK.NET_DVR_Init();
@@ -86,6 +85,7 @@ public class MemberFlowUploadService {
         //等待过程中，如果设备上传报警信息，在报警回调函数里面接收和处理报警信息
         Timer timer = new Timer();// 实例化Timer类
         timer.schedule(new TimerTask() {
+            @Override
             public void run() {
                 //撤销布防上传通道
                 if (! hCNetSDK.NET_DVR_CloseAlarmChan_V30(lAlarmHandle))
