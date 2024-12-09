@@ -1,7 +1,7 @@
 server:
   port: 8888
 camera:
-  ip: 10.106.1.20
+  ip: 10.22.40.9
   username: admin
-  password: a1234567
-  port: 18000
+  password: yanoda@888
+  port: 8000

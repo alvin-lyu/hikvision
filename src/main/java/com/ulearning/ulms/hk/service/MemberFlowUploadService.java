@@ -59,8 +59,8 @@ public class MemberFlowUploadService {
         m_strLoginInfo.bUseAsynLogin = false; //是否异步登录：0- 否，1- 是
         m_strLoginInfo.write();
         //设备信息, 输出参数
-        int lUserID = hCNetSDK.NET_DVR_Login_V30(m_sDeviceIP, m_sPort, m_sUsername, m_sPassword, m_deviceInfo30);
-//        int lUserID = hCNetSDK.NET_DVR_Login_V40(m_strLoginInfo, m_strDeviceInfo);
+        // int lUserID = hCNetSDK.NET_DVR_Login_V30(m_sDeviceIP, m_sPort, m_sUsername, m_sPassword, m_deviceInfo30);
+        int lUserID = hCNetSDK.NET_DVR_Login_V40(m_strLoginInfo, m_strDeviceInfo);
         System.out.println("lUserID.size-->" + lUserID);
         if(lUserID < 0){
             System.out.println("hCNetSDK.NET_DVR_Login_V30()"+"\n" + hCNetSDK.NET_DVR_GetErrorMsg(null));

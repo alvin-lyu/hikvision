@@ -65,22 +65,13 @@ public class MemberFlowUploadCallBackImpl implements HCNetSDK.FMSGCallBack_V31 {
                             String.format("%02d", strPDCResult.uStatModeParam.struStatTime.tmEnd.dwHour) +
                             String.format("%02d", strPDCResult.uStatModeParam.struStatTime.tmEnd.dwMinute) +
                             String.format("%02d", strPDCResult.uStatModeParam.struStatTime.tmEnd.dwSecond);
-                    sAlarmType = sAlarmType + "：客流量统计，进入人数：" + strPDCResult.dwEnterNum + "，离开人数：" + strPDCResult.dwLeaveNum +
+                    sAlarmType = sAlarmType + "：客流量统计，进入人数：" + strPDCResult.dwEnterNum + "，离开人数：" + strPDCResult.dwLeaveNum + "，重复人数：" + strPDCResult.dwDuplicatePeople +
                             ", byMode:" + strPDCResult.byMode + ", tmStart:" + dateFormat2.format(dateFormat.parse(strtmStart)) + ",tmEnd :" + dateFormat2.format(dateFormat.parse(strtmEnd));
-                JSONObject header = new JSONObject();
-                header.put("Authorization", TOKEN);
-                JSONObject body = new JSONObject();
-                body.put("startTime", dateFormat.parse(strtmStart).getTime());
-                body.put("endTime", dateFormat.parse(strtmEnd).getTime());
-                body.put("joinPeople", strPDCResult.dwEnterNum);
-                body.put("leavePeople", strPDCResult.dwLeaveNum);
-                body.put("orgId", 337);
 
-                String result = HttpClientUtil.doPost("https://sjjxapi.ulearning.cn/camera", body, header);
-                log.info("Camera Data Send Result: {}", result);
 
             }
-            log.info("sAlarmData: [{}]", sAlarmType);
+            log.info("sAlarmData: {}", sAlarmType);
+            log.info("strPDCResult: {}", JSONObject.toJSONString(strPDCResult));
             //报警类型
             //报警设备IP地址
             sIP = new String(strPDCResult.struDevInfo.struDevIP.sIpV4).split("\0", 2);
