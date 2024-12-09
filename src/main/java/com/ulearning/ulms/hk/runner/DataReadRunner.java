@@ -34,7 +34,9 @@ public class DataReadRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("Data Read Runner Start... ");
-        new MemberFlowUploadService().initMemberFlowUpload(ip, username, password, port);
+        MemberFlowUploadService service = new MemberFlowUploadService();
+        service.initMemberFlowUpload(ip, username, password, port);
+        service.searchApi();
         log.info("Data Read Runner Start Success... ");
         //等待过程中，如果设备上传报警信息，在报警回调函数里面接收和处理报警信息
         Timer timer = new Timer();// 实例化Timer类

@@ -1,5 +1,6 @@
 package com.ulearning.ulms.hk.service;
 
+import com.alibaba.fastjson.JSON;
 import com.ulearning.ulms.hk.HCNetSDK;
 import com.ulearning.ulms.hk.config.SdkInit;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +25,12 @@ import java.util.TimerTask;
 public class MemberFlowUploadService {
 
     static HCNetSDK hCNetSDK = null;
+    static int lUserID;
     static HCNetSDK.NET_DVR_USER_LOGIN_INFO m_strLoginInfo = new HCNetSDK.NET_DVR_USER_LOGIN_INFO();//设备登录信息
     static HCNetSDK.NET_DVR_DEVICEINFO_V40 m_strDeviceInfo = new HCNetSDK.NET_DVR_DEVICEINFO_V40();//设备信息
     static HCNetSDK.NET_DVR_DEVICEINFO_V30 m_deviceInfo30 = new HCNetSDK.NET_DVR_DEVICEINFO_V30();
     static HCNetSDK.NET_DVR_DEVICEINFO m_deviceInfo = new HCNetSDK.NET_DVR_DEVICEINFO();
+
 
 
     @PostConstruct
@@ -60,7 +63,7 @@ public class MemberFlowUploadService {
         m_strLoginInfo.write();
         //设备信息, 输出参数
         // int lUserID = hCNetSDK.NET_DVR_Login_V30(m_sDeviceIP, m_sPort, m_sUsername, m_sPassword, m_deviceInfo30);
-        int lUserID = hCNetSDK.NET_DVR_Login_V40(m_strLoginInfo, m_strDeviceInfo);
+        lUserID = hCNetSDK.NET_DVR_Login_V40(m_strLoginInfo, m_strDeviceInfo);
         System.out.println("lUserID.size-->" + lUserID);
         if(lUserID < 0){
             System.out.println("hCNetSDK.NET_DVR_Login_V30()"+"\n" + hCNetSDK.NET_DVR_GetErrorMsg(null));
@@ -105,6 +108,83 @@ public class MemberFlowUploadService {
                 log.warn("User Logout Success...");
             }
         }, 5 * 60 * 1000 - (endTime - startTime) - 1000);// 这里提前1秒执行, 是以防定时线程启动时将其用户注销了...
+    }
+
+
+    public static final int ISAPI_DATA_LEN = 1024*1024;
+    public static final int ISAPI_STATUS_LEN = 4*4096;
+
+
+
+    /**
+     * 搜索
+     * @return
+     */
+    public String searchApi() {
+        HCNetSDK.NET_DVR_XML_CONFIG_INPUT struXMLInput = new HCNetSDK.NET_DVR_XML_CONFIG_INPUT();
+        struXMLInput.read();
+        struXMLInput.dwSize = struXMLInput.size();
+        String strURL = "POST /ISAPI/System/Video/inputs/channels/1/counting/search?format=json";
+        int iURLlen = strURL.length();
+        HCNetSDK.BYTE_ARRAY ptrUrl = new HCNetSDK.BYTE_ARRAY(iURLlen+1);
+        System.arraycopy(strURL.getBytes(), 0, ptrUrl.byValue, 0, strURL.length());
+        ptrUrl.write();
+        struXMLInput.lpRequestUrl = ptrUrl.getPointer();
+        struXMLInput.dwRequestUrlLen = iURLlen;
+        String strInbuffer = JSON.toJSONString("{}");
+        int iInBufLen = strInbuffer.length();
+        if(iInBufLen==0)
+        {
+            struXMLInput.lpInBuffer=null;
+            struXMLInput.dwInBufferSize=0;
+            struXMLInput.write();
+        }
+        else
+        {
+            HCNetSDK.BYTE_ARRAY ptrInBuffer = new HCNetSDK.BYTE_ARRAY(iInBufLen+1);
+            ptrInBuffer.read();
+            ptrInBuffer.byValue = strInbuffer.getBytes();
+            ptrInBuffer.write();
+
+            struXMLInput.lpInBuffer = ptrInBuffer.getPointer();
+            struXMLInput.dwInBufferSize = iInBufLen;
+            struXMLInput.write();
+
+        }
+        HCNetSDK.BYTE_ARRAY ptrStatusByte = new HCNetSDK.BYTE_ARRAY(ISAPI_STATUS_LEN);
+        ptrStatusByte.read();
+
+        HCNetSDK.BYTE_ARRAY ptrOutByte = new HCNetSDK.BYTE_ARRAY(ISAPI_DATA_LEN);
+        ptrOutByte.read();
+
+        HCNetSDK.NET_DVR_XML_CONFIG_OUTPUT struXMLOutput = new HCNetSDK.NET_DVR_XML_CONFIG_OUTPUT();
+        struXMLOutput.read();
+        struXMLOutput.dwSize = struXMLOutput.size();
+        struXMLOutput.lpOutBuffer = ptrOutByte.getPointer();
+        struXMLOutput.dwOutBufferSize = ptrOutByte.size();
+        struXMLOutput.lpStatusBuffer = ptrStatusByte.getPointer();
+        struXMLOutput.dwStatusSize  = ptrStatusByte.size();
+        struXMLOutput.write();
+
+        if(!hCNetSDK.NET_DVR_STDXMLConfig(lUserID, struXMLInput, struXMLOutput))
+        {
+            int iErr = hCNetSDK.NET_DVR_GetLastError();
+            log.error( "NET_DVR_STDXMLConfig失败，错误号：" + iErr);
+            return null;
+
+        }
+        else
+        {
+            struXMLOutput.read();
+            ptrOutByte.read();
+            ptrStatusByte.read();
+            // 输出结果
+            String strOutXML = new String(ptrOutByte.byValue).trim();
+            System.out.println("strOutXML: " + strOutXML);
+            // 输出状态
+            String strStatus = new String(ptrStatusByte.byValue).trim();
+            return strOutXML;
+        }
     }
 
 }
