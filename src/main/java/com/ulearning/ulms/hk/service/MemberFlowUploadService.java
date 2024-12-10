@@ -1,8 +1,11 @@
 package com.ulearning.ulms.hk.service;
 
 import com.alibaba.fastjson.JSON;
+import com.ulearning.ulms.dto.CountingStatisticsDescription;
+import com.ulearning.ulms.dto.CountingStatisticsResult;
 import com.ulearning.ulms.hk.HCNetSDK;
 import com.ulearning.ulms.hk.config.SdkInit;
+import com.ulearning.ulms.util.XmlUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
@@ -114,13 +117,12 @@ public class MemberFlowUploadService {
     public static final int ISAPI_DATA_LEN = 1024*1024;
     public static final int ISAPI_STATUS_LEN = 4*4096;
 
-
-
     /**
      * 搜索
      * @return
      */
-    public String countingSearch() {
+    public CountingStatisticsResult countingSearch(CountingStatisticsDescription desc) {
+        log.info("countingSearch desc: {}", JSON.toJSONString(desc));
         HCNetSDK.NET_DVR_XML_CONFIG_INPUT struXMLInput = new HCNetSDK.NET_DVR_XML_CONFIG_INPUT();
         struXMLInput.read();
         struXMLInput.dwSize = struXMLInput.size();
@@ -131,20 +133,7 @@ public class MemberFlowUploadService {
         ptrUrl.write();
         struXMLInput.lpRequestUrl = ptrUrl.getPointer();
         struXMLInput.dwRequestUrlLen = iURLlen;
-        String strInbuffer = "<CountingStatisticsDescription version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\">\n" +
-                "  <statisticType>\n" +
-                "    enterExitDuplicate\n" +
-                "  </statisticType>\n" +
-                "  <reportType>\n" +
-                "    daily\n" +
-                "  </reportType>\n" +
-                "  <timeSpanList>\n" +
-                "    <timeSpan>\n" +
-                "      <startTime>2024-12-09T00:00:00</startTime>\n" +
-                "      <endTime>2024-12-09T23:59:59</endTime>\n" +
-                "    </timeSpan>\n" +
-                "  </timeSpanList>\n" +
-                "</CountingStatisticsDescription>";
+        String strInbuffer = XmlUtil.countingStatisticsDescriptionToXml(desc);
         int iInBufLen = strInbuffer.length();
         if(iInBufLen==0)
         {
@@ -194,10 +183,10 @@ public class MemberFlowUploadService {
             // 输出结果
             String strOutXML = new String(ptrOutByte.byValue).trim();
             System.out.println("strOutXML: " + strOutXML);
-            // 输出状态
-            String strStatus = new String(ptrStatusByte.byValue).trim();
-            System.out.println("strStatus: " + strStatus);
-            return strOutXML;
+            // 输出结果
+            CountingStatisticsResult result = XmlUtil.xmlToCountingStatisticsResult(strOutXML);
+            log.info("countingSearch result: {}", JSON.toJSONString(result));
+            return result;
         }
     }
 

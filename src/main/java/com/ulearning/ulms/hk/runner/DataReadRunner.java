@@ -1,5 +1,6 @@
 package com.ulearning.ulms.hk.runner;
 
+import com.ulearning.ulms.dto.CountingStatisticsDescription;
 import com.ulearning.ulms.hk.service.MemberFlowUploadService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +9,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.io.FileNotFoundException;
+import java.util.Collections;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -37,7 +39,15 @@ public class DataReadRunner implements ApplicationRunner {
         MemberFlowUploadService service = new MemberFlowUploadService();
         service.initMemberFlowUpload(ip, username, password, port);
         service.countingSearchCapabilities();
-        service.countingSearch();
+
+        CountingStatisticsDescription.TimeSpan timeSpan = new CountingStatisticsDescription.TimeSpan();
+        timeSpan.setStartTime("2024-12-09T00:00:00");
+        timeSpan.setEndTime("2024-12-09T23:59:59");
+        CountingStatisticsDescription desc = new CountingStatisticsDescription();
+        desc.setStatisticType("enterExitDuplicate");
+        desc.setReportType("daily");
+        desc.setTimeSpanList(Collections.singletonList(timeSpan));
+        service.countingSearch(desc);
         log.info("Data Read Runner Start Success... ");
         //等待过程中，如果设备上传报警信息，在报警回调函数里面接收和处理报警信息
         Timer timer = new Timer();// 实例化Timer类
