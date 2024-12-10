@@ -120,18 +120,31 @@ public class MemberFlowUploadService {
      * 搜索
      * @return
      */
-    public String searchApi() {
+    public String countingSearch() {
         HCNetSDK.NET_DVR_XML_CONFIG_INPUT struXMLInput = new HCNetSDK.NET_DVR_XML_CONFIG_INPUT();
         struXMLInput.read();
         struXMLInput.dwSize = struXMLInput.size();
-        String strURL = "POST /ISAPI/System/Video/inputs/channels/1/counting/search?format=json";
+        String strURL = "POST /ISAPI/System/Video/inputs/channels/1/counting/search";
         int iURLlen = strURL.length();
         HCNetSDK.BYTE_ARRAY ptrUrl = new HCNetSDK.BYTE_ARRAY(iURLlen+1);
         System.arraycopy(strURL.getBytes(), 0, ptrUrl.byValue, 0, strURL.length());
         ptrUrl.write();
         struXMLInput.lpRequestUrl = ptrUrl.getPointer();
         struXMLInput.dwRequestUrlLen = iURLlen;
-        String strInbuffer = JSON.toJSONString("{}");
+        String strInbuffer = "<CountingStatisticsDescription version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\">\n" +
+                "  <statisticType>\n" +
+                "    enterExitDuplicate\n" +
+                "  </statisticType>\n" +
+                "  <reportType>\n" +
+                "    daily\n" +
+                "  </reportType>\n" +
+                "  <timeSpanList>\n" +
+                "    <timeSpan>\n" +
+                "      <startTime>2024-12-09T00:00:00</startTime>\n" +
+                "      <endTime>2024-12-09T23:59:59</endTime>\n" +
+                "    </timeSpan>\n" +
+                "  </timeSpanList>\n" +
+                "</CountingStatisticsDescription>";
         int iInBufLen = strInbuffer.length();
         if(iInBufLen==0)
         {
@@ -181,6 +194,78 @@ public class MemberFlowUploadService {
             // 输出结果
             String strOutXML = new String(ptrOutByte.byValue).trim();
             System.out.println("strOutXML: " + strOutXML);
+            // 输出状态
+            String strStatus = new String(ptrStatusByte.byValue).trim();
+            System.out.println("strStatus: " + strStatus);
+            return strOutXML;
+        }
+    }
+
+    /**
+     * 搜索
+     * @return
+     */
+    public String countingSearchCapabilities() {
+        HCNetSDK.NET_DVR_XML_CONFIG_INPUT struXMLInput = new HCNetSDK.NET_DVR_XML_CONFIG_INPUT();
+        struXMLInput.read();
+        struXMLInput.dwSize = struXMLInput.size();
+        String strURL = "GET /ISAPI/System/Video/inputs/channels/1/counting/search/capabilities";
+        int iURLlen = strURL.length();
+        HCNetSDK.BYTE_ARRAY ptrUrl = new HCNetSDK.BYTE_ARRAY(iURLlen+1);
+        System.arraycopy(strURL.getBytes(), 0, ptrUrl.byValue, 0, strURL.length());
+        ptrUrl.write();
+        struXMLInput.lpRequestUrl = ptrUrl.getPointer();
+        struXMLInput.dwRequestUrlLen = iURLlen;
+        String strInbuffer = "";
+        int iInBufLen = strInbuffer.length();
+        if(iInBufLen==0)
+        {
+            struXMLInput.lpInBuffer=null;
+            struXMLInput.dwInBufferSize=0;
+            struXMLInput.write();
+        }
+        else
+        {
+            HCNetSDK.BYTE_ARRAY ptrInBuffer = new HCNetSDK.BYTE_ARRAY(iInBufLen+1);
+            ptrInBuffer.read();
+            ptrInBuffer.byValue = strInbuffer.getBytes();
+            ptrInBuffer.write();
+
+            struXMLInput.lpInBuffer = ptrInBuffer.getPointer();
+            struXMLInput.dwInBufferSize = iInBufLen;
+            struXMLInput.write();
+
+        }
+        HCNetSDK.BYTE_ARRAY ptrStatusByte = new HCNetSDK.BYTE_ARRAY(ISAPI_STATUS_LEN);
+        ptrStatusByte.read();
+
+        HCNetSDK.BYTE_ARRAY ptrOutByte = new HCNetSDK.BYTE_ARRAY(ISAPI_DATA_LEN);
+        ptrOutByte.read();
+
+        HCNetSDK.NET_DVR_XML_CONFIG_OUTPUT struXMLOutput = new HCNetSDK.NET_DVR_XML_CONFIG_OUTPUT();
+        struXMLOutput.read();
+        struXMLOutput.dwSize = struXMLOutput.size();
+        struXMLOutput.lpOutBuffer = ptrOutByte.getPointer();
+        struXMLOutput.dwOutBufferSize = ptrOutByte.size();
+        struXMLOutput.lpStatusBuffer = ptrStatusByte.getPointer();
+        struXMLOutput.dwStatusSize  = ptrStatusByte.size();
+        struXMLOutput.write();
+
+        if(!hCNetSDK.NET_DVR_STDXMLConfig(lUserID, struXMLInput, struXMLOutput))
+        {
+            int iErr = hCNetSDK.NET_DVR_GetLastError();
+            log.error( "NET_DVR_STDXMLConfig失败，错误号：" + iErr);
+            return null;
+
+        }
+        else
+        {
+            struXMLOutput.read();
+            ptrOutByte.read();
+            ptrStatusByte.read();
+            // 输出结果
+            String strOutXML = new String(ptrOutByte.byValue).trim();
+            System.out.println("GET search capabilities strOutXML: " + strOutXML);
             // 输出状态
             String strStatus = new String(ptrStatusByte.byValue).trim();
             return strOutXML;
