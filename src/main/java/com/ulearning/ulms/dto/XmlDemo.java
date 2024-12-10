@@ -28,8 +28,8 @@ public class XmlDemo {
 
     public static void main(String[] args) {
 
-        // testCountingStatisticsDescription();
-        testCountingStatisticsResult();
+        testCountingStatisticsDescription();
+        // testCountingStatisticsResult();
 
         // String xmlString = getXMLString("/Users/alvin/Downloads/result.xml");
         // System.out.println(xmlString);

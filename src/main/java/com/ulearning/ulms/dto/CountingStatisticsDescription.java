@@ -2,7 +2,7 @@ package com.ulearning.ulms.dto;
 
 import lombok.Data;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
 import java.util.List;
 
 /**
@@ -11,6 +11,7 @@ import java.util.List;
  */
 @Data
 @XmlRootElement(name = "CountingStatisticsDescription")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class CountingStatisticsDescription {
 
     /**
@@ -26,12 +27,21 @@ public class CountingStatisticsDescription {
     /**
      * 时间段列表
      */
+    @XmlElementWrapper(name = "timeSpanList")
+    @XmlElement(name = "timeSpan")
     private List<TimeSpan> timeSpanList;
 
     @Data
     @XmlRootElement(name = "timeSpan")
     public static class TimeSpan {
+        /**
+         * 开始时间
+         */
         private String startTime;
+
+        /**
+         * 结束时间
+         */
         private String endTime;
     }
 
