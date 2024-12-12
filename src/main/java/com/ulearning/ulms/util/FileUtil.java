@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 /**
  * @author chenyu
@@ -54,6 +58,39 @@ public class FileUtil {
                     out.flush();
                     out.close();
                     in.close();
+                }
+            }
+        }
+    }
+
+    /**
+     * 递归复制文件夹及其内容
+     *
+     * @param source 源文件夹路径
+     * @param target 目标文件夹路径
+     * @throws IOException 如果复制过程中发生错误
+     */
+    public static void copyDirectory(Path source, Path target) throws IOException {
+        // 如果源路径不存在，抛出异常
+        if (!Files.exists(source)) {
+            throw new IOException("源文件夹不存在: " + source);
+        }
+
+        // 如果目标路径不存在，创建目标文件夹
+        if (!Files.exists(target)) {
+            Files.createDirectories(target);
+        }
+
+        // 遍历源文件夹中的所有文件和子文件夹
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(source)) {
+            for (Path file : stream) {
+                Path destination = target.resolve(source.relativize(file));
+                if (Files.isDirectory(file)) {
+                    // 如果是文件夹，递归复制
+                    copyDirectory(file, destination);
+                } else {
+                    // 如果是文件，直接复制
+                    Files.copy(file, destination, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
         }

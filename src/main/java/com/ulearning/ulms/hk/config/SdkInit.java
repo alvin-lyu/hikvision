@@ -10,8 +10,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author chenyu
@@ -26,6 +30,8 @@ public class SdkInit {
     @SneakyThrows
     public static HCNetSDK init(HCNetSDK hcNetSDK) {
         if (Platform.isWindows()) {
+            // 初始化library
+            initLibrary("hkwinlib/FileList.txt");
             InputStream initialStream = new ClassPathResource("hkwinlib/HCNetSDK.dll").getInputStream();
             File targetFile = new File("hkwinlib/HCNetSDK.dll");
             if (targetFile.exists()){
@@ -38,7 +44,8 @@ public class SdkInit {
             log.info("Windows HCNetSDK Path Load Success...");
         }
         if (Platform.isLinux()) {
-            // 要把 hklinuxlib 这个文件夹复制下 jar 的同目录下
+            // 初始化library
+            initLibrary("hklinuxlib/FileList.txt");
             InputStream initialStream = new ClassPathResource("hklinuxlib/libhcnetsdk.so").getInputStream();
             File targetFile = new File("hklinuxlib/libhcnetsdk.so");
             if (targetFile.exists()){
@@ -74,5 +81,28 @@ public class SdkInit {
 
         return hcNetSDK;
     }
+
+    private static void initLibrary(String libraryListPath) {
+        try {
+            InputStream inputStream = new ClassPathResource(libraryListPath).getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                InputStream initialStream = new ClassPathResource(line).getInputStream();
+                File targetFile = new File(line);
+                if (targetFile.exists()){
+                    targetFile.delete();
+                }
+                FileUtils.copyInputStreamToFile(initialStream, targetFile);
+                initialStream.close();
+            }
+            reader.close();
+            inputStream.close();
+        } catch (Throwable e) {
+            log.error("initLibrary error", e);
+        }
+
+    }
+
     
 }
